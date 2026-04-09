@@ -1,41 +1,45 @@
-from flask import Flask, jsonify  # Flask pro webový server, jsonify pro JSON odpovědi
-from openai import OpenAI  # OpenAI klient pro komunikaci s AI modelem
+import os
+from flask import Flask, jsonify
+import httpx
+from openai import OpenAI
 
-app = Flask(__name__)  # Vytvoření Flask aplikace
+app = Flask(__name__)
 
-# Nastavení připojení k OpenAI-compatible API
+# Čtení nastavení z proměnných prostředí
 client = OpenAI(
-    api_key="sk-ivPZMD_qRIv0vyeGo4a43A",  # API klíč pro autentizaci
-    base_url="https://kurim.ithope.eu/v1"   # Vlastní server místo oficiálního OpenAI
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    base_url=os.environ.get("OPENAI_BASE_URL"),
+    http_client=httpx.Client(verify=False)  # Školní server má self-signed certifikát
 )
 
-# Endpoint /ai přijímá POST requesty z widget.py
+@app.route('/ping', methods=['GET'])
+def ping():
+    return "pong"
+
+@app.route('/status', methods=['GET'])
+def status():
+    return jsonify({"status": "ok", "model": "gemma3:27b"})
+
 @app.route('/ai', methods=['POST'])
 def ai_tip():
     try:
-        # Zavolání AI modelu s požadavkem na wellness tip
         response = client.chat.completions.create(
-            model="gemma3:27b",  # Model který chceme použít
+            model="gemma3:27b",
             messages=[
                 {
                     "role": "user",
-                    # Prompt pro AI - krátký wellness tip v češtině
                     "content": "Dej mi jeden krátký wellness tip pro práci u počítače. Max 2 věty. Česky."
                 }
             ],
-            max_tokens=100  # Maximální délka odpovědi
+            max_tokens=100
         )
-        # Vytažení textu z odpovědi a oříznutí mezer
         tip = response.choices[0].message.content.strip()
-        # Vrácení tipu jako JSON: {"tip": "..."}
         return jsonify({"tip": tip})
     except Exception as e:
-        # Při chybě vrátíme záložní tip místo pádu serveru
         return jsonify({"tip": "Nezapomeň se protáhnout!"}), 500
 
-# Spuštění serveru
 if __name__ == "__main__":
     app.run(
-        host="0.0.0.0",  # Naslouchá na všech rozhraních (dostupné z VirtualBoxu)
-        port=8081         # Port musí odpovídat SERVER_URL v widget.py
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 8081))  # Port z proměnné prostředí
     )
