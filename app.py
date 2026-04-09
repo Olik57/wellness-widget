@@ -1,18 +1,12 @@
 import os
-import json
-import urllib.request
-import ssl
-from flask import Flask, jsonify, send_from_directory
+import requests
+from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
 
-API_KEY = os.environ.get("OPENAI_API_KEY")
-BASE_URL = os.environ.get("OPENAI_BASE_URL")
-
-# Hlavní stránka — otevře index.html
-@app.route('/', methods=['GET'])
+@app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
 @app.route('/ping', methods=['GET'])
 def ping():
@@ -24,29 +18,29 @@ def status():
 
 @app.route('/ai', methods=['POST'])
 def ai_tip():
+    api_key = os.getenv("OPENAI_API_KEY")
+    base_url = os.getenv("OPENAI_BASE_URL")
+
+    payload = {
+        "model": "gemma3:27b",
+        "messages": [
+            {"role": "user", "content": "Dej mi jeden krátký wellness tip pro práci u počítače. Max 2 věty. Česky."}
+        ],
+        "stream": False
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
     try:
-        ctx = ssl._create_unverified_context()
-        data = json.dumps({
-            "model": "gemma3:27b",
-            "messages": [{"role": "user", "content": "Dej mi jeden krátký wellness tip pro práci u počítače. Max 2 věty. Česky."}],
-            "max_tokens": 100
-        }).encode()
-        req = urllib.request.Request(
-            f"{BASE_URL}/chat/completions",
-            data=data,
-            headers={
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
-            }
-        )
-        resp = json.loads(urllib.request.urlopen(req, context=ctx).read())
-        tip = resp["choices"][0]["message"]["content"].strip()
+        response = requests.post(f"{base_url}/chat/completions", json=payload, headers=headers)
+        result = response.json()
+        tip = result['choices'][0]['message']['content']
         return jsonify({"tip": tip})
     except Exception as e:
-        return jsonify({"tip": "Nezapomeň se protáhnout!"}), 500
+        return jsonify({"tip": "Nezapomeň se protáhnout!"})
 
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8081))
-    )
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8081)
