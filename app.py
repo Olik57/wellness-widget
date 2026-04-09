@@ -1,16 +1,20 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 import httpx
 from openai import OpenAI
 
 app = Flask(__name__)
 
-# Čtení nastavení z proměnných prostředí
 client = OpenAI(
-    api_key= os.getenv("OPENAI_API_KEY"),
-    base_url= os.getenv("OPENAI_BASE_URL"),
-    http_client=httpx.Client(verify=False)  # Školní server má self-signed certifikát
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    base_url=os.environ.get("OPENAI_BASE_URL"),
+    http_client=httpx.Client(verify=False)
 )
+
+# Hlavní stránka — otevře index.html
+@app.route('/', methods=['GET'])
+def index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/ping', methods=['GET'])
 def ping():
@@ -41,5 +45,5 @@ def ai_tip():
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8081))  # Port z proměnné prostředí
+        port=int(os.environ.get("PORT", 8081))
     )
