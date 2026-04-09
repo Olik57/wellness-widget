@@ -7,8 +7,8 @@ app = Flask(__name__)
 
 # Čtení nastavení z proměnných prostředí
 client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-    base_url=os.environ.get("OPENAI_BASE_URL"),
+    api_key= os.getenv("OPENAI_API_KEY"),
+    base_url= os.getenv("OPENAI_BASE_URL"),
     http_client=httpx.Client(verify=False)  # Školní server má self-signed certifikát
 )
 
