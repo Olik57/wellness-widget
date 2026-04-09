@@ -1,0 +1,8 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8081"
+    environment:
+      - OPENAI_API_KEY=sk-ivPZMD_qRIv0vyeGo4a43A
+      - OPENAI_BASE_URL=https://kurim.ithope.eu/v1
