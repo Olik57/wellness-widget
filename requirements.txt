@@ -1,4 +1,5 @@
 flask
 requests
-httpx
+psycopg2-binary
 openai
+httpx
