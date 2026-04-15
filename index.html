@@ -1,54 +1,29 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <title>Wellness Widget</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f0f0f0; }
-        #widget {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #4CAF50;
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            width: 250px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        #widget h3 { margin: 0 0 10px 0; }
-        #tip { font-size: 14px; margin: 10px 0; }
-        button {
-            background: white;
-            color: #4CAF50;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <h1>Vítej na Wellness stránce! 💚</h1>
+async function sendChat() {
+    const input = document.getElementById('user-input');
+    const history = document.getElementById('chat-history');
+    
+    // V JS používáme .trim() místo .strip()!
+    const val = input.value.trim(); 
+    if (!val) return;
 
-    <div id="widget">
-        <h3>💧 Wellness Tip</h3>
-        <div id="tip">Klikni na tlačítko pro tip!</div>
-        <button onclick="getTip()">Nový tip od AI 🤖</button>
-    </div>
+    // Přidání zprávy uživatele do okna
+    history.innerHTML += `<div class="msg user-msg"><b>Vy:</b> ${val}</div>`;
+    input.value = '';
+    history.scrollTop = history.scrollHeight;
 
-    <script>
-        async function getTip() {
-            document.getElementById('tip').innerText = 'Načítám...';
-            const res = await fetch('/ai', { method: 'POST' });
-            const data = await res.json();
-            document.getElementById('tip').innerText = data.tip;
-        }
-
-        // Automaticky načti tip po 30 sekundách
-        setInterval(getTip, 30000);
-    </script>
-</body>
-</html>
+    try {
+        const res = await fetch('/ai', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: val, is_tip: false })
+        });
+        const data = await res.json();
+        
+        // Přidání odpovědi AI
+        history.innerHTML += `<div class="msg ai-msg"><b>AI:</b> ${data.reply}</div>`;
+        history.scrollTop = history.scrollHeight;
+    } catch (error) {
+        console.error("Chyba při komunikaci se serverem:", error);
+        history.innerHTML += `<div class="msg ai-msg" style="color:red">Chyba: Server neodpovídá.</div>`;
+    }
+}
