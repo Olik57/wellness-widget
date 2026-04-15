@@ -5,7 +5,6 @@ services:
       - "8081:8081"
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_BASE_URL: https://kurim.ithope.eu/v1
       DATABASE_URL: postgresql://postgres:heslo123@db:5432/wellness_db
     depends_on:
       - db
