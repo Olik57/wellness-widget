@@ -1,4 +1,16 @@
-db:
+services:
+  app:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: https://kurim.ithope.eu/v1
+      DATABASE_URL: postgresql://postgres:heslo123@db:5432/wellness_db
+    depends_on:
+      - db
+
+  db:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
