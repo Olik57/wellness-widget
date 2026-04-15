@@ -1,150 +1,41 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maturitní AI Parťák</title>
-    <style>
-        :root {
-            --bg-dark: #1e1e2e;
-            --tip-bg: #181825;
-            --accent: #fab387;
-            --user-color: #89b4fa;
-            --text: #cdd6f4;
-            --input-bg: #313244;
-        }
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text);
-            font-family: 'Helvetica', sans-serif;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 450px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        /* Horní Wellness Panel */
-        .panel {
-            border: 1px solid var(--accent);
-            background-color: var(--tip-bg);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .panel-title { color: var(--accent); font-size: 0.8rem; margin-bottom: 10px; font-weight: bold; }
+async function sendChat() {
+    console.log("Tlačítko bylo stisknuto!"); // Kontrola v konzoli (F12)
+
+    const input = document.getElementById('user-input');
+    const history = document.getElementById('chat-history');
+    
+    if (!input || !history) {
+        console.error("Chyba: Nepodařilo se najít input nebo history v HTML!");
+        return;
+    }
+
+    const val = input.value.trim(); // POZOR: Musí být .trim(), ne .strip()
+    if (!val) return;
+
+    // Přidání zprávy uživatele do okna
+    history.innerHTML += `<div class="msg user-msg"><b>Vy:</b> ${val}</div>`;
+    input.value = '';
+    history.scrollTop = history.scrollHeight;
+
+    try {
+        const res = await fetch('/ai', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: val })
+        });
         
-        /* Spodní Chat Panel */
-        .chat-container {
-            border: 1px solid var(--user-color);
-            background-color: var(--bg-dark);
-            padding: 15px;
-            border-radius: 10px;
-            flex-grow: 1;
-            min-height: 350px;
-            display: flex;
-            flex-direction: column;
+        const data = await res.json();
+        console.log("Odpověď od serveru:", data);
+
+        // Přidání odpovědi AI (Klíč musí odpovídat tomu v app.py)
+        if (data.reply) {
+            history.innerHTML += `<div class="msg ai-msg"><b>AI:</b> ${data.reply}</div>`;
+        } else {
+            history.innerHTML += `<div class="msg ai-msg">AI neodpovídá správně.</div>`;
         }
-        .chat-title { color: var(--user-color); font-size: 0.8rem; text-align: center; margin-bottom: 10px; font-weight: bold; }
-        
-        #chat-history {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .msg { padding: 10px; border-radius: 8px; font-size: 0.95rem; max-width: 85%; }
-        .user-msg { background: var(--user-color); color: var(--bg-dark); align-self: flex-end; }
-        .ai-msg { background: var(--input-bg); color: var(--text); align-self: flex-start; }
-
-        /* Vstup */
-        .input-area { display: flex; gap: 10px; }
-        input {
-            flex-grow: 1;
-            background: var(--input-bg);
-            border: none;
-            color: white;
-            padding: 12px;
-            border-radius: 5px;
-            outline: none;
-        }
-        button {
-            background: var(--accent);
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: var(--bg-dark);
-        }
-        .btn-tip { background: var(--input-bg); color: var(--accent); font-size: 0.7rem; margin-top: 10px; border: 1px solid var(--accent); }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="panel">
-            <div class="panel-title">WELLNESS INFO PANEL</div>
-            <div id="tip-text">Načítám tip ze serveru...</div>
-            <button class="btn-tip" onclick="fetchTip()">🔄 NOVÝ TIP</button>
-        </div>
-
-        <div class="chat-container">
-            <div class="chat-title">CHAT S AI</div>
-            <div id="chat-history">
-                <div class="msg ai-msg">Zeptej se na něco...</div>
-            </div>
-            <div class="input-area">
-                <input type="text" id="user-input" placeholder="Napiš zprávu..." onkeypress="if(event.key==='Enter') sendChat()">
-                <button onclick="sendChat()">POSLAT</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Funkce pro získání tipu
-        async function fetchTip() {
-            const res = await fetch('/ai', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ is_tip: true })
-            });
-            const data = await res.json();
-            document.getElementById('tip-text').innerText = data.reply;
-        }
-
-        // Funkce pro chat
-        async function sendChat() {
-            const input = document.getElementById('user-input');
-            const history = document.getElementById('chat-history');
-            const val = input.value.strip();
-            if (!val) return;
-
-            // Přidat zprávu uživatele
-            history.innerHTML += `<div class="msg user-msg">${val}</div>`;
-            input.value = '';
-            history.scrollTop = history.scrollHeight;
-
-            const res = await fetch('/ai', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: val, is_tip: false })
-            });
-            const data = await res.json();
-            
-            // Přidat odpověď AI
-            history.innerHTML += `<div class="msg ai-msg">${data.reply}</div>`;
-            history.scrollTop = history.scrollHeight;
-        }
-
-        // Načíst první tip po startu
-        window.onload = fetchTip;
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error("Chyba fetch:", error);
+        history.innerHTML += `<div class="msg ai-msg" style="color:red">Server je nedostupný.</div>`;
+    }
+    history.scrollTop = history.scrollHeight;
+}
