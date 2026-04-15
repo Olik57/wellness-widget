@@ -1,41 +1,58 @@
-async function sendChat() {
-    console.log("Tlačítko bylo stisknuto!"); // Kontrola v konzoli (F12)
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Wellness AI Asistent</title>
+    <style>
+        body { background-color: #1e1e2e; color: #cdd6f4; font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; }
+        .container { width: 400px; background: #181825; padding: 20px; border-radius: 15px; border: 1px solid #fab387; }
+        #chat-history { height: 300px; overflow-y: auto; border-bottom: 1px solid #313244; margin-bottom: 15px; padding: 10px; }
+        .msg { margin-bottom: 10px; padding: 8px; border-radius: 5px; }
+        .user-msg { background: #89b4fa; color: #11111b; text-align: right; }
+        .ai-msg { background: #313244; color: #cdd6f4; }
+        .input-area { display: flex; gap: 5px; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #313244; color: white; }
+        button { background: #fab387; color: #11111b; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align:center; color:#fab387;">🌿 Wellness AI</h2>
+        <div id="chat-history"></div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Zeptej se na tip...">
+            <button onclick="sendChat()">POSLAT</button>
+        </div>
+    </div>
 
-    const input = document.getElementById('user-input');
-    const history = document.getElementById('chat-history');
-    
-    if (!input || !history) {
-        console.error("Chyba: Nepodařilo se najít input nebo history v HTML!");
-        return;
-    }
+    <script>
+        async function sendChat() {
+            const input = document.getElementById('user-input');
+            const history = document.getElementById('chat-history');
+            const val = input.value.trim(); // TRIM místo STRIP
+            
+            if (!val) return;
 
-    const val = input.value.trim(); // POZOR: Musí být .trim(), ne .strip()
-    if (!val) return;
+            history.innerHTML += `<div class="msg user-msg"><b>Vy:</b> ${val}</div>`;
+            input.value = '';
+            history.scrollTop = history.scrollHeight;
 
-    // Přidání zprávy uživatele do okna
-    history.innerHTML += `<div class="msg user-msg"><b>Vy:</b> ${val}</div>`;
-    input.value = '';
-    history.scrollTop = history.scrollHeight;
-
-    try {
-        const res = await fetch('/ai', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ message: val })
-        });
-        
-        const data = await res.json();
-        console.log("Odpověď od serveru:", data);
-
-        // Přidání odpovědi AI (Klíč musí odpovídat tomu v app.py)
-        if (data.reply) {
-            history.innerHTML += `<div class="msg ai-msg"><b>AI:</b> ${data.reply}</div>`;
-        } else {
-            history.innerHTML += `<div class="msg ai-msg">AI neodpovídá správně.</div>`;
+            try {
+                const res = await fetch('/ai', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: val })
+                });
+                const data = await res.json();
+                
+                if (data.reply) {
+                    history.innerHTML += `<div class="msg ai-msg"><b>AI:</b> ${data.reply}</div>`;
+                }
+            } catch (e) {
+                history.innerHTML += `<div class="msg ai-msg" style="color:red">Chyba spojení se serverem.</div>`;
+            }
+            history.scrollTop = history.scrollHeight;
         }
-    } catch (error) {
-        console.error("Chyba fetch:", error);
-        history.innerHTML += `<div class="msg ai-msg" style="color:red">Server je nedostupný.</div>`;
-    }
-    history.scrollTop = history.scrollHeight;
-}
+    </script>
+</body>
+</html>
