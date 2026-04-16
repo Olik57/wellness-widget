@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Historie konverzací</title>
+    <style>
+        body { background-color: #1e1e2e; color: #cdd6f4; font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; background: #181825; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #313244; }
+        th { background-color: #fab387; color: #11111b; }
+        tr:hover { background-color: #313244; }
+        .id-col { color: #89b4fa; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>📜 Historie konverzací (z databáze PostgreSQL)</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Uživatel (Zpráva)</th>
+                <th>AI (Odpověď)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for radek in data %}
+            <tr>
+                <td class="id-col">#{{ radek[0] }}</td>
+                <td>{{ radek[1] }}</td>
+                <td>{{ radek[2] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="/" style="color: #fab387; text-decoration: none;">← Zpět na chat</a>
+</body>
+</html>
